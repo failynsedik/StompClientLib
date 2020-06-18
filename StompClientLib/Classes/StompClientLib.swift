@@ -77,6 +77,7 @@ public class StompClientLib: NSObject, SRWebSocketDelegate {
     public var connection: Bool = false
     public var certificateCheckEnabled = true
     private var urlRequest: NSURLRequest?
+    private var reconnectTimer: Timer?
     
     public func sendJSONForDict(dict: AnyObject, toDestination destination: String) {
         do {
@@ -454,7 +455,7 @@ public class StompClientLib: NSObject, SRWebSocketDelegate {
     // TODO: MAKE A VARIABLE TO CHECK RECONNECT OPTION IS AVAILABLE OR NOT
     public func reconnect(request: NSURLRequest, delegate: StompClientLibDelegate, connectionHeaders: [String: String] = [String: String](), time: Double = 1.0, exponentialBackoff: Bool = true){
         if #available(iOS 10.0, *) {
-            Timer.scheduledTimer(withTimeInterval: time, repeats: true, block: { _ in
+            reconnectTimer = Timer.scheduledTimer(withTimeInterval: time, repeats: true, block: { _ in
                 self.reconnectLogic(request: request, delegate: delegate
                     , connectionHeaders: connectionHeaders)
             })
@@ -484,6 +485,11 @@ public class StompClientLib: NSObject, SRWebSocketDelegate {
             // There is a connection header
             return true
         }
+    }
+    
+    public func invalidateReconnect() {
+        reconnectTimer?.invalidate()
+        reconnectTimer = nil
     }
     
     // Autodisconnect with a given time
